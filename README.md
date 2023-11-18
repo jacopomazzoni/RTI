@@ -29,7 +29,7 @@ This Arduino project provides firmware for an RTI (Reflection Transformation Ima
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/rti-dome-controller.git
+    git clone https://github.com/jacopomazzoni/RTI.git
     ```
 
 2. Upload the firmware to your Arduino board using the Arduino IDE or your preferred method.
