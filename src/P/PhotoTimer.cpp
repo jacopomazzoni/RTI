@@ -1,17 +1,23 @@
 #include "Arduino.h"
 #include "PhotoTimer.h"
 
-PhotoTimer::PhotoTimer(int i ) { this->index = (i >= 0 && i <= this->n ? i: 0); }
+PhotoTimer::PhotoTimer(int i) { this->index = (i >= 0 && i <= this->n ? i : 0); }
 
 PhotoTimer::PhotoTimer() { this->index = 0; }
-
 
 int PhotoTimer::getMillis()
 {
     int x = this->times[this->index];
     if (x != 0)
     {
-        return round(1000. / x);
+        if (x < 0)
+        {
+            return abs(x) * 1000;
+        }
+        else
+        {
+            return round(1000. / x);
+        }
     }
     else
     {
@@ -20,15 +26,15 @@ int PhotoTimer::getMillis()
 }
 
 int PhotoTimer::getFraction()
-{   
-    this->index = (this->index < this->n ? this->index : this->n-1); 
+{
+    this->index = (this->index < this->n ? this->index : this->n - 1);
     return this->times[this->index];
 }
 
 void PhotoTimer::increase()
 {
     if (this->index < this->n)
-    { 
+    {
         this->index++;
     }
 }
@@ -43,7 +49,7 @@ void PhotoTimer::decrease()
 
 void PhotoTimer::goTo(int i)
 {
-    this->index = abs(i)%this->n;
+    this->index = abs(i) % this->n;
     /*
     if (i >= 0 && i < this->n)
     {

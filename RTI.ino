@@ -16,17 +16,16 @@ Encoder encoder_2(E2_CLK, E2_DT, 1);
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 
 // String to manipulate for padded output on LCD
-char lineBuffer [20];
+char lineBuffer[20];
 
 // Color Sensor
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
-
-//Fastled Objects and structs
+// Fastled Objects and structs
 CRGBW leds[NUM_LEDS];
-CRGB *ledsRGB = (CRGB *) &leds[0];
+CRGB *ledsRGB = (CRGB *)&leds[0];
 
-//active led index
+// active led index
 int pivot = 0;
 // easily tweakable brightness value
 const uint8_t brightness = 128;
@@ -38,17 +37,17 @@ int prevDelay, prevDuration;
 // indicates what menu-scanning phase we are in
 int stage;
 
-//encoder switches management variables
+// encoder switches management variables
 int sw1_v, sw1_p;
 int sw2_v, sw2_p;
 
-//color sensor output variables
+// color sensor output variables
 float red, green, blue;
 
 // how long to display instruction message at the beginning
 int countdown = 1;
 
-//calculate time passed between two milliseconds
+// calculate time passed between two milliseconds
 
 TimeDiff t1;
 TimeDiff t2;
@@ -59,7 +58,8 @@ void printInfo(PhotoTimer, int);
 float calcETA(int, int);
 void turnoffLED(CRGBW *leds, int n);
 
-void setup() {
+void setup()
+{
   // start from the instructions phase
   stage = 0;
 
@@ -68,8 +68,8 @@ void setup() {
   pinMode(RELAY, OUTPUT);
   digitalWrite(RELAY, HIGH);
   pinMode(BUZZER_PIN, OUTPUT);
-  
-  //initialize lcd
+
+  // initialize lcd
   lcd.begin(20, 4);
 
   // Fastled init
@@ -79,20 +79,22 @@ void setup() {
 
   prevDelay = encoder_1.getValue();
   prevDuration = encoder_2.getValue();
-  pinMode (E1_SW, INPUT_PULLUP);
-  pinMode (E2_SW, INPUT_PULLUP);
+  pinMode(E1_SW, INPUT_PULLUP);
+  pinMode(E2_SW, INPUT_PULLUP);
   sw1_p = digitalRead(E1_SW);
   sw2_p = digitalRead(E2_SW);
-  if (tcs.begin()) {
-    tcs.setInterrupt(true);  // turn off LED
+  if (tcs.begin())
+  {
+    tcs.setInterrupt(true); // turn off LED
   }
 }
 
-
-void loop() {
+void loop()
+{
 
   // Display instructions ===========================
-  if ( stage == 0 ) {
+  if (stage == 0)
+  {
     lcd.setCursor(0, 0);
     lcd.print("RTI Dome Controller");
     lcd.setCursor(10, 1);
@@ -105,49 +107,55 @@ void loop() {
     delay(1000);
     countdown--;
     lcd.clear();
-    if ( countdown <= 0 ) {
+    if (countdown <= 0)
+    {
       stage++;
-      printInfo( shutterSpeed, photoDelay);
+      printInfo(shutterSpeed, photoDelay);
     }
   }
 
   // set timer options ===========================================================================
-  if ( stage == 1 ) {
+  if (stage == 1)
+  {
 
     photoDelay = abs(encoder_1.getValue());
     photoDuration = abs(encoder_2.getValue());
 
     shutterSpeed.goTo(photoDuration);
 
-    if (photoDelay != prevDelay || photoDuration != prevDuration ) {
-      printInfo( shutterSpeed, photoDelay);
-      //Serial.print(photoDelay);
-      //Serial.print(" - ");
-      //Serial.println(encoder_1.getValue());
+    if (photoDelay != prevDelay || photoDuration != prevDuration)
+    {
+      printInfo(shutterSpeed, photoDelay);
+      // Serial.print(photoDelay);
+      // Serial.print(" - ");
+      // Serial.println(encoder_1.getValue());
     }
 
     prevDelay = photoDelay;
     prevDuration = photoDuration;
 
     // advance to next stage condition
-    if ( digitalRead(START) == LOW ) { 
+    if (digitalRead(START) == LOW)
+    {
       stage++;
       lcd.clear();
       t1.setStart();
       t2.setStart();
-      t2.setStop(ETA+millis());
+      t2.setStop(ETA + millis());
       pivot = 0;
     }
   }
-  
+
   // start Photographing ===================================================
-  if ( stage == 2 ) {
-    
-    // if button is still down continue taking pictures 
-    if ( digitalRead(START) == LOW ) {
+  if (stage == 2)
+  {
+
+    // if button is still down continue taking pictures
+    if (digitalRead(START) == LOW)
+    {
       // update timer to know how much time has passed
       t1.setStop();
-      
+
       // get baseline color info
       tcs.getRGB(&red, &green, &blue);
 
@@ -155,8 +163,8 @@ void loop() {
       lcd.clear();
       // led percentage progress
       lcd.setCursor(0, 0);
-      //lcd.print("Scan progress: %d%");
-      //lcd.setCursor(0, 3);
+      // lcd.print("Scan progress: %d%");
+      // lcd.setCursor(0, 3);
       sprintf(lineBuffer, "Scan Progress: %d%%", 100 * pivot / NUM_LEDS);
       lcd.print(lineBuffer);
 
@@ -168,11 +176,9 @@ void loop() {
       // time left
       lcd.setCursor(0, 2);
       t2.setStart(); // count from zero to
-      //t2.setStop(ETA); // estimated time in millis
+      // t2.setStop(ETA); // estimated time in millis
       sprintf(lineBuffer, "%02dm%02ds ETA:%02dm%02ds", t1.getMinutes(), t1.getSeconds() % 60, t2.getMinutes(), t2.getSeconds() % 60);
       lcd.print(lineBuffer);
-
-      
 
       // turn all leds off
       turnoffLED(leds, NUM_LEDS);
@@ -189,7 +195,8 @@ void loop() {
       digitalWrite(RELAY, HIGH);
       delay(photoDelay);
 
-      if ( pivot == NUM_LEDS) {
+      if (pivot == NUM_LEDS)
+      {
 
         // take a green picture
 
@@ -214,38 +221,46 @@ void loop() {
         // turn all leds off
         turnoffLED(leds, NUM_LEDS);
         FastLED.show();
-        
+
         // take a red picture
 
         // wait for button to reset
-        while (digitalRead(START) == LOW) {};
-        turnoffLED(leds, NUM_LEDS);
-        FastLED.show();
-        lcd.clear();
-        printInfo( shutterSpeed, photoDelay);
-        stage--;
-      }
-      
-    } else { // if button is released stop and go back
+        while (digitalRead(START) == LOW)
+        {
+        };
         turnoffLED(leds, NUM_LEDS);
         FastLED.show();
         lcd.clear();
         printInfo(shutterSpeed, photoDelay);
-        // take a red picture
         stage--;
-
+      }
+    }
+    else
+    { // if button is released stop and go back
+      turnoffLED(leds, NUM_LEDS);
+      FastLED.show();
+      lcd.clear();
+      printInfo(shutterSpeed, photoDelay);
+      // take a red picture
+      stage--;
     }
   }
-
-
-
 }
 
-void printInfo(PhotoTimer a, int b) {
+void printInfo(PhotoTimer a, int b)
+{
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Set timer options");
-  sprintf(lineBuffer, "1/%3ds   %4dms", a.getFraction(), b);
+  int tFraction = a.getFraction();
+  if (tFraction > 0)
+  {
+    sprintf(lineBuffer, "1/%3ds   %4dms", tFraction, b);
+  }
+  else
+  {
+    sprintf(lineBuffer, "%3ds   %4dms", tFraction, b);
+  }
   lcd.setCursor(0, 1);
   lcd.print("Exp      Delay");
   lcd.setCursor(0, 2);
@@ -258,16 +273,18 @@ void printInfo(PhotoTimer a, int b) {
   lcd.print(lineBuffer);
 }
 
-float calcETA(int a, int b) {
+float calcETA(int a, int b)
+{
   const int est_calc_time = 160;
   float x = a + b + est_calc_time;
   x *= NUM_LEDS;
   return x;
 }
 
-
-void turnoffLED(CRGBW *leds, int n) {
-  for (int i = 0; i < n; i++) {
+void turnoffLED(CRGBW *leds, int n)
+{
+  for (int i = 0; i < n; i++)
+  {
     leds[i] = CRGBW(0, 0, 0, 0);
   }
 }

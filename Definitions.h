@@ -5,7 +5,7 @@
 
 // LED library withcustom RGBW modification
 #include "src/FL/FastLED.h"
-#include "src/FL/FastLED_RGBW.h"
+#include "FastLED_RGBW.h"
 
 // Custom built libraries by yours truly
 #include "src/E/Encoder.h"
